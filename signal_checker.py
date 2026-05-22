@@ -1,6 +1,6 @@
 import requests
 
-TOKEN   = "8493063414:AAGs6qSi4zNFq84U9qOgvj6wfQkicGmySXI"
+TOKEN   = "8493063414:AAGV8a7eCkDey481lukc-GR4mpsOFV52GTw"
 CHAT_ID = "1767336223"
 
 
