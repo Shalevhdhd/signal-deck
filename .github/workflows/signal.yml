@@ -3,13 +3,31 @@ on:
   schedule:
     - cron: '*/5 6-21 * * 1-5'
   workflow_dispatch:
+
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Cache sent signals
+        uses: actions/cache@v3
+        with:
+          path: sent_signals.json
+          key: sent-signals-${{ github.run_id }}
+          restore-keys: |
+            sent-signals-
+
       - run: pip install requests
+
       - run: python signal_checker.py
+
+      - name: Save sent signals
+        uses: actions/cache/save@v3
+        with:
+          path: sent_signals.json
+          key: sent-signals-${{ github.run_id }}
