@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal Deck</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0c0f;--s:#111418;--s2:#181c22;--b:#1e242d;--g:#00e5a0;--r:#ff4757;--am:#ffb800;--bl:#4da6ff;--mu:#4a5568;--tx:#e2e8f0;--t2:#94a3b8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'Syne',sans-serif;min-height:100vh;padding:16px;max-width:680px;margin:0 auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.logo{font-size:11px;font-weight:800;letter-spacing:3px;color:var(--g)}
+.clock-wrap{font-family:'Space Mono',monospace;font-size:11px;background:var(--s);border:1px solid var(--b);border-radius:6px;padding:4px 10px;color:var(--t2);display:flex;align-items:center;gap:6px}
+.blink{width:6px;height:6px;border-radius:50%;background:var(--g);animation:bl 2s infinite;flex-shrink:0}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+.nav{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:14px}
+.nav-tab{padding:9px 4px;text-align:center;background:var(--s);border:1px solid var(--b);border-radius:7px;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--mu);transition:all .2s}
+.nav-tab.active{background:var(--s2);border-color:#00e5a050;color:var(--g)}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:14px;margin-bottom:10px}
+.card-title{font-size:10px;letter-spacing:2px;color:var(--mu);font-family:'Space Mono',monospace;margin-bottom:10px}
+.main-signal{border-radius:12px;padding:18px;text-align:center;margin-bottom:10px}
+.wait{background:linear-gradient(135deg,#1a1500,#2a2000);border:1px solid #ffb80040}
+.long{background:linear-gradient(135deg,#001a0f,#002a15);border:1px solid #00e5a040}
+.short{background:linear-gradient(135deg,#1a0005,#2a000a);border:1px solid #ff475740}
+.sig-lbl{font-size:10px;letter-spacing:3px;color:var(--mu);margin-bottom:4px}
+.sig-big{font-size:36px;font-weight:800;letter-spacing:4px}
+.sig-sub{font-size:12px;color:var(--t2);margin-top:6px;line-height:1.5}
+.sig-price{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;margin-top:8px}
+.trio{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.tc{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:10px 6px;text-align:center}
+.ti{font-size:16px;margin-bottom:3px}.tl{font-size:9px;color:var(--mu);letter-spacing:1px;margin-bottom:2px}
+.tv{font-size:13px;font-weight:700;font-family:'Space Mono',monospace}.ts{font-size:9px;color:var(--mu);margin-top:2px}
+.g{color:var(--g)}.r{color:var(--r)}.am{color:var(--am)}.bl{color:var(--bl)}
+.rth-card{background:var(--s2);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--b)}
+.rth-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.rth-label{font-size:11px;color:var(--t2)}.rth-val{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
+.rth-bar-wrap{height:5px;background:var(--b);border-radius:3px;margin-top:6px;overflow:hidden}
+.rth-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--r),var(--am),var(--g))}
+.rth-note{font-size:10px;color:var(--mu);font-family:'Space Mono',monospace;margin-top:5px}
+.mkt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.mkt-card{background:var(--s);border:1px solid var(--b);border-radius:8px;padding:10px 12px}
+.mkt-name{font-size:10px;color:var(--mu);letter-spacing:1px;font-family:'Space Mono',monospace}
+.mkt-price{font-size:15px;font-weight:700;font-family:'Space Mono',monospace;margin:3px 0}
+.mkt-ch{font-size:10px;font-family:'Space Mono',monospace}
+.mkt-sig{font-size:9px;letter-spacing:1px;padding:2px 7px;border-radius:4px;margin-top:4px;display:inline-block;font-family:'Space Mono',monospace}
+.sw{background:#ffb80015;color:var(--am);border:1px solid #ffb80030}
+.sc{background:#4da6ff15;color:var(--bl);border:1px solid #4da6ff30}
+.step{display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid var(--b)}
+.step:last-child{border-bottom:none}
+.sn{width:20px;height:20px;border-radius:50%;background:var(--s2);border:1px solid var(--b);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--g);flex-shrink:0;margin-top:1px}
+.st{font-size:12px;color:var(--t2);line-height:1.5}.st strong{color:var(--tx)}
+/* JOURNAL */
+.sum-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.sum-card{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:12px;text-align:center}
+.sum-lbl{font-size:10px;color:var(--mu);letter-spacing:1px;font-family:'Space Mono',monospace;margin-bottom:4px}
+.sum-val{font-size:20px;font-weight:800;font-family:'Space Mono',monospace}
+.sum-sub{font-size:10px;color:var(--mu);margin-top:2px;font-family:'Space Mono',monospace}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+label{font-size:10px;color:var(--t2);display:block;margin-bottom:4px;font-family:'Space Mono',monospace}
+input,select{width:100%;padding:8px 10px;background:var(--s2);border:1px solid var(--b);border-radius:6px;color:var(--tx);font-family:'Space Mono',monospace;font-size:12px;outline:none}
+select option{background:var(--s2)}
+.add-btn{width:100%;padding:10px;background:linear-gradient(135deg,#001a0f,#002a15);border:1px solid #00e5a040;border-radius:8px;color:var(--g);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:2px;transition:all .2s}
+.add-btn:hover{border-color:var(--g)}
+.trade-item{background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--b)}
+.trade-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.trade-name{font-size:12px;font-weight:700}
+.trade-dir{font-size:9px;letter-spacing:1px;padding:2px 7px;border-radius:4px;font-family:'Space Mono',monospace}
+.dl{background:#00e5a015;color:var(--g);border:1px solid #00e5a030}
+.ds{background:#ff475715;color:var(--r);border:1px solid #ff475730}
+.trade-result{font-size:14px;font-weight:800;font-family:'Space Mono',monospace}
+.trade-details{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.td-item{text-align:center}
+.td-lbl{font-size:9px;color:var(--mu);font-family:'Space Mono',monospace}
+.td-val{font-size:11px;font-weight:700;font-family:'Space Mono',monospace;color:var(--tx)}
+.trade-bar{height:3px;background:var(--b);border-radius:2px;margin-top:8px;overflow:hidden}
+.trade-bar-fill{height:100%;border-radius:2px}
+.trade-date{font-size:9px;color:var(--mu);font-family:'Space Mono',monospace;margin-top:4px}
+.del-btn{background:none;border:none;color:var(--mu);cursor:pointer;font-size:12px;padding:0 4px}
+.del-btn:hover{color:var(--r)}
+.empty{text-align:center;padding:24px;color:var(--mu);font-family:'Space Mono',monospace;font-size:11px}
+.eq-chart{height:80px;margin-top:8px}
+.scan-btn{width:100%;padding:12px;background:linear-gradient(135deg,#001a0f,#002a15);border:1px solid #00e5a040;border-radius:10px;color:var(--g);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:2px;margin-bottom:12px;transition:all .2s}
+.scan-btn:hover{border-color:var(--g)}
+.footer{text-align:center;font-size:10px;color:var(--mu);font-family:'Space Mono',monospace;letter-spacing:1px;padding-top:10px;border-top:1px solid var(--b)}
+.freshbar{display:flex;align-items:center;gap:8px;background:var(--s);border:1px solid var(--b);border-radius:8px;padding:7px 12px;margin-bottom:12px}
+.fb-wrap{flex:1;height:4px;background:var(--b);border-radius:2px;overflow:hidden}
+.fb{height:100%;border-radius:2px}
+.fs{font-size:9px;letter-spacing:1px;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:4px;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">⬡ SIGNAL DECK</div>
+  <div class="clock-wrap"><div class="blink"></div><span id="clock">--:--:--</span><span style="color:var(--mu)">ET</span></div>
+</div>
+
+<div class="freshbar">
+  <span style="font-size:10px;color:var(--mu);font-family:'Space Mono',monospace">טריות</span>
+  <div class="fb-wrap"><div class="fb" id="fb" style="width:100%;background:var(--g)"></div></div>
+  <span style="font-size:10px;font-family:'Space Mono',monospace;color:var(--t2);min-width:36px;text-align:right" id="ft">0:00</span>
+  <div class="fs" id="fs" style="background:#00e5a015;color:var(--g);border:1px solid #00e5a030">טרי</div>
+</div>
+
+<div class="nav">
+  <div class="nav-tab active" onclick="sw('es',this)">📈 ES</div>
+  <div class="nav-tab" onclick="sw('markets',this)">🌍 שווקים</div>
+  <div class="nav-tab" onclick="sw('journal',this)">📓 יומן</div>
+  <div class="nav-tab" onclick="sw('history',this)">📋 היסטוריה</div>
+  <div class="nav-tab" onclick="sw('calc',this)">🧮 מחשבון</div>
+</div>
+
+<!-- ES -->
+<div class="panel active" id="panel-es">
+  <div class="main-signal wait" id="mainCard">
+    <div class="sig-lbl">ES/MES עכשיו</div>
+    <div class="sig-big am" id="sigAction">המתן</div>
+    <div class="sig-sub" id="sigSub">לחץ סקן לעדכון נתונים</div>
+    <div class="sig-price" id="sigPrice">ES: —</div>
+  </div>
+  <div class="trio">
+    <div class="tc"><div class="ti">🎯</div><div class="tl">כניסה</div><div class="tv am" id="esEntry">—</div><div class="ts">יורד ועוצר</div></div>
+    <div class="tc"><div class="ti">🛑</div><div class="tl">סטופ</div><div class="tv r" id="esStop">—</div><div class="ts">צא מיד</div></div>
+    <div class="tc"><div class="ti">✅</div><div class="tl">מטרה</div><div class="tv g" id="esTarget">—</div><div class="ts">קח רווח</div></div>
+  </div>
+  <div class="rth-card">
+    <div style="font-size:10px;letter-spacing:2px;color:var(--bl);font-family:'Space Mono',monospace;margin-bottom:8px">⏱ RTH</div>
+    <div class="rth-row"><div class="rth-label">סטטוס</div><div class="rth-val bl" id="rthCD">טוען...</div></div>
+    <div class="rth-row"><div class="rth-label">סשן</div><div class="rth-val" id="rthPct" style="color:var(--mu)">—</div></div>
+    <div class="rth-bar-wrap"><div class="rth-bar" id="rthBar" style="width:0%"></div></div>
+    <div class="rth-note" id="rthNote">—</div>
+  </div>
+  <div class="card">
+    <div class="card-title">עדכן רמות ידנית</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div><label>כניסה</label><input type="number" id="inEntry" placeholder="7375" oninput="updateLevels()"></div>
+      <div><label>סטופ</label><input type="number" id="inStop" placeholder="7360" oninput="updateLevels()"></div>
+      <div><label>מטרה</label><input type="number" id="inTarget" placeholder="7415" oninput="updateLevels()"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MARKETS -->
+<div class="panel" id="panel-markets">
+  <div class="mkt-grid">
+    <div class="mkt-card"><div class="mkt-name">ES / S&P 500</div><div class="mkt-price r">7,493</div><div class="mkt-ch g">▲ +0.48%</div><div class="mkt-sig sw">המתן</div></div>
+    <div class="mkt-card"><div class="mkt-name">NQ / NASDAQ</div><div class="mkt-price r">29,547</div><div class="mkt-ch g">▲ +0.62%</div><div class="mkt-sig sw">המתן</div></div>
+    <div class="mkt-card"><div class="mkt-name">GOLD</div><div class="mkt-price am">$4,510</div><div class="mkt-ch r">▼ -0.2%</div><div class="mkt-sig sc">עוקב</div></div>
+    <div class="mkt-card"><div class="mkt-name">OIL</div><div class="mkt-price am">$96.26</div><div class="mkt-ch r">▼ -5.7%</div><div class="mkt-sig sw">זהירות</div></div>
+    <div class="mkt-card"><div class="mkt-name">BTC</div><div class="mkt-price bl">$75,856</div><div class="mkt-ch r">▼ -0.3%</div><div class="mkt-sig sw">המתן</div></div>
+    <div class="mkt-card"><div class="mkt-name">ETH</div><div class="mkt-price bl">$2,070</div><div class="mkt-ch g">▲ +1.1%</div><div class="mkt-sig sc">עוקב</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">קשרים בין שווקים</div>
+    <div class="step"><div class="sn">📉</div><div class="st"><strong>נפט ירד 5.7%</strong> — ציפיות להסכם איראן. מוריד אינפלציה = טוב ל-ES.</div></div>
+    <div class="step"><div class="sn">🥇</div><div class="st"><strong>זהב ירד</strong> — פחות פחד בשוק = מניות עולות.</div></div>
+    <div class="step"><div class="sn">₿</div><div class="st"><strong>BTC ב-$75K</strong> — מתאם לשוק המניות. שבירת $80K = סיגנל חיובי.</div></div>
+  </div>
+</div>
+
+<!-- JOURNAL -->
+<div class="panel" id="panel-journal">
+  <div class="sum-grid">
+    <div class="sum-card"><div class="sum-lbl">רווח/הפסד כולל</div><div class="sum-val" id="jTotalPL">$0</div><div class="sum-sub" id="jTotalPct">0.00%</div></div>
+    <div class="sum-card"><div class="sum-lbl">אחוז הצלחה</div><div class="sum-val" id="jWinRate">—</div><div class="sum-sub" id="jWL">0W / 0L</div></div>
+    <div class="sum-card"><div class="sum-lbl">ממוצע רווח</div><div class="sum-val g" id="jAvgWin">—</div><div class="sum-sub">לעסקה מנצחת</div></div>
+    <div class="sum-card"><div class="sum-lbl">ממוצע הפסד</div><div class="sum-val r" id="jAvgLoss">—</div><div class="sum-sub">לעסקה מפסידה</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">+ הוסף עסקה</div>
+    <div class="form-grid">
+      <div><label>שוק</label><select id="fMkt"><option>ES</option><option>NQ</option><option>BTC</option><option>ETH</option><option>GOLD</option><option>OIL</option></select></div>
+      <div><label>כיוון</label><select id="fDir"><option value="LONG">LONG</option><option value="SHORT">SHORT</option></select></div>
+      <div><label>כניסה</label><input type="number" id="fEntry" placeholder="7375"></div>
+      <div><label>יציאה בפועל</label><input type="number" id="fExit" placeholder="7415"></div>
+      <div><label>סטופ</label><input type="number" id="fStop" placeholder="7360"></div>
+      <div><label>תאריך</label><input type="date" id="fDate"></div>
+    </div>
+    <button class="add-btn" onclick="addTrade()">✚ &nbsp;הוסף ליומן</button>
+  </div>
+
+  <div class="card" id="eqCard" style="display:none">
+    <div class="card-title">עקומת הון — $100 לעסקה</div>
+    <div class="eq-chart"><canvas id="eqCanvas"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">עסקאות</div>
+    <div id="tradesList"><div class="empty">אין עסקאות — הוסף את הראשונה</div></div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="panel" id="panel-history">
+  <div class="card">
+    <div class="card-title">סיגנלים אחרונים</div>
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--b)">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--mu);flex-shrink:0"></div>
+      <div style="flex:1"><div style="font-size:11px;font-weight:700">ES — המתן</div><div style="font-size:10px;color:var(--mu);font-family:'Space Mono',monospace">May 22 · 7,493</div></div>
+      <div style="font-size:12px;font-weight:700;font-family:'Space Mono',monospace;color:var(--mu)">—</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--b)">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--g);flex-shrink:0"></div>
+      <div style="flex:1"><div style="font-size:11px;font-weight:700">NQ — LONG</div><div style="font-size:10px;color:var(--mu);font-family:'Space Mono',monospace">May 22 · כניסה 29,547</div></div>
+      <div style="font-size:12px;font-weight:700;font-family:'Space Mono',monospace" class="g">+$140</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--g);flex-shrink:0"></div>
+      <div style="flex:1"><div style="font-size:11px;font-weight:700">BTC — LONG</div><div style="font-size:10px;color:var(--mu);font-family:'Space Mono',monospace">May 21 · כניסה $75,800</div></div>
+      <div style="font-size:12px;font-weight:700;font-family:'Space Mono',monospace" class="g">+$180</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">סיכום שבועי</div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--b)"><span style="font-size:11px;color:var(--t2)">נצחונות</span><span style="font-size:13px;font-weight:700;font-family:'Space Mono',monospace" class="g">2</span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--b)"><span style="font-size:11px;color:var(--t2)">הפסדים</span><span style="font-size:13px;font-weight:700;font-family:'Space Mono',monospace" class="r">1</span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0"><span style="font-size:11px;color:var(--t2)">רווח נטו</span><span style="font-size:13px;font-weight:700;font-family:'Space Mono',monospace" class="g">+$320</span></div>
+  </div>
+</div>
+
+<!-- CALC -->
+<div class="panel" id="panel-calc">
+  <div class="card">
+    <div class="card-title">🧮 מחשבון רווח/הפסד MES</div>
+    <label>כניסה</label><input type="number" id="ce" value="7375" oninput="calc()" style="margin-bottom:10px">
+    <label>יציאה</label><input type="number" id="cx" value="7454" oninput="calc()" style="margin-bottom:10px">
+    <label>מחזות MES</label><input type="number" id="cc" value="1" min="1" oninput="calc()" style="margin-bottom:10px">
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--b)"><span style="font-size:11px;color:var(--t2)">נקודות</span><span style="font-size:13px;font-weight:700;font-family:'Space Mono',monospace" id="rPts">—</span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--b)"><span style="font-size:11px;color:var(--t2)">$ למחזה</span><span style="font-size:13px;font-weight:700;font-family:'Space Mono',monospace" id="rPer">—</span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0"><span style="font-size:11px;color:var(--t2)">סה"כ</span><span style="font-size:16px;font-weight:700;font-family:'Space Mono',monospace" id="rTot">—</span></div>
+  </div>
+</div>
+
+<button class="scan-btn" onclick="alert('פתח Claude ובקש: תריץ סקן ES/MES מעודכן')">↗ &nbsp;פתח Claude לסקן מעודכן</button>
+<div class="footer">PAPER TRADING ONLY · לא ייעוץ פיננסי · signal-deck</div>
+
+<script>
+let trades = JSON.parse(localStorage.getItem('sdj') || '[]');
+let scanTime = Date.now();
+const MAX = 15*60*1000;
+function pad(n){return String(n).padStart(2,'0')}
+function round(n,d){return Math.round(n*Math.pow(10,d))/Math.pow(10,d)}
+
+// clock + rth + freshness
+function tick(){
+  const et = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  document.getElementById('clock').textContent = pad(et.getHours())+':'+pad(et.getMinutes())+':'+pad(et.getSeconds());
+  rth(et); fresh();
+}
+function rth(et){
+  const h=et.getHours(),m=et.getMinutes(),s=et.getSeconds();
+  const now=h*3600+m*60+s,open=9*3600+30*60,close=16*3600;
+  const cd=document.getElementById('rthCD'),pct=document.getElementById('rthPct'),bar=document.getElementById('rthBar'),note=document.getElementById('rthNote');
+  if(now>=open&&now<close){
+    const rem=close-now;
+    cd.textContent=pad(Math.floor(rem/3600))+':'+pad(Math.floor((rem%3600)/60))+':'+pad(rem%60);
+    cd.style.color='#4da6ff';const p=Math.round(((now-open)/(close-open))*100);
+    pct.textContent=p+'% עבר';bar.style.width=p+'%';
+    if(rem<30*60){note.textContent='⚠️ פחות מ-30 דקות — סגור פוזיציות';note.style.color='#ff4757';}
+    else if(rem<90*60){note.textContent='שעה וחצי לסגירה';note.style.color='#ffb800';}
+    else{note.textContent='RTH פתוח';note.style.color='#4a5568';}
+  } else if(now<open){
+    const rem=open-now;cd.textContent='פותח בעוד '+pad(Math.floor(rem/3600))+':'+pad(Math.floor((rem%3600)/60))+':'+pad(rem%60);
+    cd.style.color='#ffb800';pct.textContent='Pre-Market';bar.style.width='0%';note.textContent='RTH פותח ב-9:30 ET';note.style.color='#ffb800';
+  } else {
+    cd.textContent='סגור — מחר 9:30 ET';cd.style.color='#4a5568';pct.textContent='After Hours';bar.style.width='100%';note.textContent='הכן תוכנית למחר';note.style.color='#4a5568';
+  }
+}
+function fresh(){
+  const age=Date.now()-scanTime,pct=Math.max(0,100-(age/MAX*100));
+  const mins=Math.floor(age/60000),secs=Math.floor((age%60000)/1000);
+  const bar=document.getElementById('fb'),ft=document.getElementById('ft'),fs=document.getElementById('fs');
+  bar.style.width=pct.toFixed(1)+'%';ft.textContent=mins+':'+pad(secs);
+  if(pct>60){bar.style.background='#00e5a0';fs.style.cssText='background:#00e5a015;color:#00e5a0;border:1px solid #00e5a030;font-size:9px;letter-spacing:1px;font-family:Space Mono,monospace;padding:2px 7px;border-radius:4px';fs.textContent='טרי';}
+  else if(pct>25){bar.style.background='#ffb800';fs.style.cssText='background:#ffb80015;color:#ffb800;border:1px solid #ffb80030;font-size:9px;letter-spacing:1px;font-family:Space Mono,monospace;padding:2px 7px;border-radius:4px';fs.textContent='מתיישן';}
+  else{bar.style.background='#ff4757';fs.style.cssText='background:#ff475715;color:#ff4757;border:1px solid #ff475730;font-size:9px;letter-spacing:1px;font-family:Space Mono,monospace;padding:2px 7px;border-radius:4px';fs.textContent='עדכן!';}
+}
+function sw(id,el){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');document.getElementById('panel-'+id).classList.add('active');
+}
+function updateLevels(){
+  const e=document.getElementById('inEntry').value;
+  const s=document.getElementById('inStop').value;
+  const t=document.getElementById('inTarget').value;
+  if(e)document.getElementById('esEntry').textContent=parseFloat(e).toLocaleString();
+  if(s)document.getElementById('esStop').textContent=parseFloat(s).toLocaleString();
+  if(t)document.getElementById('esTarget').textContent=parseFloat(t).toLocaleString();
+  scanTime=Date.now();
+}
+function calc(){
+  const e=parseFloat(document.getElementById('ce').value)||0;
+  const x=parseFloat(document.getElementById('cx').value)||0;
+  const c=parseInt(document.getElementById('cc').value)||1;
+  const pts=x-e,per=pts*5,tot=per*c;
+  document.getElementById('rPts').textContent=(pts>=0?'+':'')+pts.toFixed(2)+' נק׳';
+  document.getElementById('rPts').style.color=pts>=0?'#00e5a0':'#ff4757';
+  document.getElementById('rPer').textContent=(per>=0?'+$':'-$')+Math.abs(per).toFixed(0);
+  document.getElementById('rPer').style.color=per>=0?'#00e5a0':'#ff4757';
+  document.getElementById('rTot').textContent=(tot>=0?'+$':'-$')+Math.abs(tot).toFixed(0);
+  document.getElementById('rTot').style.color=tot>=0?'#00e5a0':'#ff4757';
+}
+// JOURNAL
+document.getElementById('fDate').valueAsDate = new Date();
+function calcPL(t){
+  const diff = t.dir==='LONG' ? t.exit-t.entry : t.entry-t.exit;
+  const pct = (diff/t.entry)*100;
+  const usd = (diff/t.entry)*100;
+  return {pct:round(pct,2),usd:round(usd,2)};
+}
+function calcRR(t){
+  const reward=Math.abs(t.exit-t.entry),risk=Math.abs(t.entry-t.stop);
+  return risk>0?round(reward/risk,1):0;
+}
+function addTrade(){
+  const entry=parseFloat(document.getElementById('fEntry').value);
+  const exit=parseFloat(document.getElementById('fExit').value);
+  const stop=parseFloat(document.getElementById('fStop').value);
+  if(!entry||!exit||!stop){alert('מלא את כל השדות');return;}
+  trades.unshift({id:Date.now(),market:document.getElementById('fMkt').value,dir:document.getElementById('fDir').value,entry,exit,stop,date:document.getElementById('fDate').value});
+  localStorage.setItem('sdj',JSON.stringify(trades));
+  renderJournal();
+  document.getElementById('fEntry').value='';document.getElementById('fExit').value='';document.getElementById('fStop').value='';
+}
+function deleteTrade(id){
+  trades=trades.filter(t=>t.id!==id);
+  localStorage.setItem('sdj',JSON.stringify(trades));
+  renderJournal();
+}
+function renderJournal(){
+  const list=document.getElementById('tradesList');
+  if(!trades.length){list.innerHTML='<div class="empty">אין עסקאות — הוסף את הראשונה</div>';updateJSummary([]);document.getElementById('eqCard').style.display='none';return;}
+  list.innerHTML=trades.map(t=>{
+    const pl=calcPL(t),rr=calcRR(t),win=pl.usd>=0,bp=Math.min(Math.abs(pl.pct)*5,100);
+    return `<div class="trade-item"><div class="trade-top"><div style="display:flex;align-items:center;gap:8px"><span class="trade-name">${t.market}</span><span class="trade-dir ${t.dir==='LONG'?'dl':'ds'}">${t.dir}</span></div><div style="display:flex;align-items:center;gap:8px"><span class="trade-result ${win?'g':'r'}">${win?'+':''}$${pl.usd} (${win?'+':''}${pl.pct}%)</span><button class="del-btn" onclick="deleteTrade(${t.id})">✕</button></div></div><div class="trade-details"><div class="td-item"><div class="td-lbl">כניסה</div><div class="td-val">${t.entry}</div></div><div class="td-item"><div class="td-lbl">יציאה</div><div class="td-val">${t.exit}</div></div><div class="td-item"><div class="td-lbl">סטופ</div><div class="td-val">${t.stop}</div></div><div class="td-item"><div class="td-lbl">R:R</div><div class="td-val ${win?'g':'r'}">1:${rr}</div></div></div><div class="trade-bar"><div class="trade-bar-fill" style="width:${bp}%;background:${win?'#00e5a0':'#ff4757'}"></div></div><div class="trade-date">${t.date}</div></div>`;
+  }).join('');
+  updateJSummary(trades);
+  drawEq(trades);
+  document.getElementById('eqCard').style.display='block';
+}
+function updateJSummary(trades){
+  if(!trades.length){['jTotalPL','jWinRate','jAvgWin','jAvgLoss'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('jTotalPct').textContent='0.00%';document.getElementById('jWL').textContent='0W / 0L';return;}
+  const pls=trades.map(t=>calcPL(t).usd);
+  const total=round(pls.reduce((a,b)=>a+b,0),2);
+  const totalPct=round((total/(100*trades.length))*100,2);
+  const wins=pls.filter(p=>p>=0),losses=pls.filter(p=>p<0);
+  const wr=round((wins.length/trades.length)*100,0);
+  const aw=wins.length?round(wins.reduce((a,b)=>a+b,0)/wins.length,2):0;
+  const al=losses.length?round(Math.abs(losses.reduce((a,b)=>a+b,0)/losses.length),2):0;
+  const pe=document.getElementById('jTotalPL');pe.textContent=(total>=0?'+$':'-$')+Math.abs(total);pe.className='sum-val '+(total>=0?'g':'r');
+  const pp=document.getElementById('jTotalPct');pp.textContent=(totalPct>=0?'+':'')+totalPct+'%';pp.style.color=total>=0?'#00e5a0':'#ff4757';
+  const we=document.getElementById('jWinRate');we.textContent=wr+'%';we.className='sum-val '+(wr>=50?'g':wr>=40?'am':'r');
+  document.getElementById('jWL').textContent=wins.length+'W / '+losses.length+'L';
+  document.getElementById('jAvgWin').textContent=aw?'+$'+aw:'—';
+  document.getElementById('jAvgLoss').textContent=al?'-$'+al:'—';
+}
+function drawEq(trades){
+  const canvas=document.getElementById('eqCanvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.parentElement.offsetWidth||300,H=80;
+  canvas.width=W;canvas.height=H;
+  const rev=[...trades].reverse();
+  let eq=0;const pts=[0,...rev.map(t=>{eq+=calcPL(t).usd;return eq;})];
+  const min=Math.min(...pts),max=Math.max(...pts),range=max-min||1;
+  ctx.clearRect(0,0,W,H);
+  ctx.beginPath();
+  pts.forEach((p,i)=>{const x=(i/(pts.length-1))*W,y=H-((p-min)/range)*(H-10)-5;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.strokeStyle=eq>=0?'#00e5a0':'#ff4757';ctx.lineWidth=2;ctx.stroke();
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+  ctx.fillStyle=eq>=0?'#00e5a008':'#ff475708';ctx.fill();
+  const zy=H-((0-min)/range)*(H-10)-5;
+  ctx.beginPath();ctx.moveTo(0,zy);ctx.lineTo(W,zy);
+  ctx.strokeStyle='#1e242d';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+}
+setInterval(tick,1000);tick();calc();renderJournal();
+</script>
+</body>
+</html>
