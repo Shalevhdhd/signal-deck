@@ -10,7 +10,7 @@ LEVELS = {
     "BTC":  {"ticker": "BTC-USD", "entry": 76200, "stop": 75000, "target": 79500, "mult": 1},
     "ETH":  {"ticker": "ETH-USD", "entry": 2050,  "stop": 1980,  "target": 2200,  "mult": 1},
     "GOLD": {"ticker": "GC=F",    "entry": 4480,  "stop": 4440,  "target": 4580,  "mult": 1},
-    "OIL":  {"ticker": "CL=F",    "entry": 102,   "stop": 100,   "target": 107,   "mult": 1},
+    "OIL":  {"ticker": "CL=F",    "entry": 102.33,   "stop": 100,   "target": 107,   "mult": 1},
 }
 
 def get_price(ticker):
